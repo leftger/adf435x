@@ -1,0 +1,174 @@
+config:
+  register_address_type: u8
+  default_byte_order: LE
+  default_register_access: RW
+  default_field_access: RW
+
+R0FrequencyControl:
+  type: register
+  address: 0
+  size_bits: 32
+  fields:
+    register_address:
+      base: uint
+      access: RO
+      start: 0
+      end: 3
+    fractional_value:
+      base: uint
+      start: 3
+      end: 15
+    integer_value:
+      base: uint
+      start: 15
+      end: 31
+    reserved:
+      base: uint
+      access: RO
+      start: 31
+      end: 32
+
+R1PhaseAndModulus:
+  type: register
+  address: 1
+  size_bits: 32
+  fields:
+    register_address:
+      base: uint
+      access: RO
+      start: 0
+      end: 3
+    modulus:
+      base: uint
+      start: 3
+      end: 15
+    phase_value:
+      base: uint
+      start: 15
+      end: 27
+    prescaler_89:
+      base: bool
+      start: 27
+      end: 28
+    phase_adjust:
+      base: bool
+      start: 28
+      end: 29
+    reserved:
+      base: uint
+      access: RO
+      start: 29
+      end: 32
+
+R2ReferenceAndChargePump:
+  type: register
+  address: 2
+  size_bits: 32
+  fields:
+    register_address:
+      base: uint
+      access: RO
+      start: 0
+      end: 3
+    muxout:
+      base: uint
+      start: 3
+      end: 6
+    noise_mode:
+      base: uint
+      start: 6
+      end: 8
+    reserved_bit8:
+      base: uint
+      access: RO
+      start: 8
+      end: 9
+    charge_pump_current:
+      base: uint
+      start: 9
+      end: 13
+    double_buffer:
+      base: bool
+      start: 13
+      end: 14
+    reference_counter:
+      base: uint
+      start: 14
+      end: 24
+    ref_divide_by_2:
+      base: bool
+      start: 24
+      end: 25
+    ref_doubler:
+      base: bool
+      start: 25
+      end: 26
+    lock_detect_function:
+      base: bool
+      start: 26
+      end: 27
+    lock_detect_precision:
+      base: bool
+      start: 27
+      end: 28
+    phase_detector_polarity:
+      base: bool
+      start: 28
+      end: 29
+    power_down:
+      base: bool
+      start: 29
+      end: 30
+    charge_pump_three_state:
+      base: bool
+      start: 30
+      end: 31
+    counter_reset:
+      base: bool
+      start: 31
+      end: 32
+
+R3FunctionControl:
+  type: register
+  address: 3
+  size_bits: 32
+  fields:
+    register_address:
+      base: uint
+      access: RO
+      start: 0
+      end: 3
+    payload:
+      base: uint
+      start: 3
+      end: 32
+
+R4OutputStage:
+  type: register
+  address: 4
+  size_bits: 32
+  fields:
+    register_address:
+      base: uint
+      access: RO
+      start: 0
+      end: 3
+    payload:
+      base: uint
+      start: 3
+      end: 32
+
+R5LatchAndStatus:
+  type: register
+  address: 5
+  size_bits: 32
+  fields:
+    register_address:
+      base: uint
+      access: RO
+      start: 0
+      end: 3
+    payload:
+      base: uint
+      start: 3
+      end: 32

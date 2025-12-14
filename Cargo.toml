@@ -1,0 +1,11 @@
+[package]
+name = "adf435x"
+version = "0.1.0"
+edition = "2024"
+
+[features]
+default = ["std"]
+std = []
+
+[dependencies]
+device-driver = "1.0.7"
