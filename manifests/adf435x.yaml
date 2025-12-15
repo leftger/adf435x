@@ -22,11 +22,6 @@ R0FrequencyControl:
       base: uint
       start: 15
       end: 31
-    reserved:
-      base: uint
-      access: RO
-      start: 31
-      end: 32
 
 R1PhaseAndModulus:
   type: register
@@ -54,11 +49,6 @@ R1PhaseAndModulus:
       base: bool
       start: 28
       end: 29
-    reserved:
-      base: uint
-      access: RO
-      start: 29
-      end: 32
 
 R2ReferenceAndChargePump:
   type: register
@@ -138,10 +128,86 @@ R3FunctionControl:
       access: RO
       start: 0
       end: 3
-    payload:
-      base: uint
+    counter_reset:
+      base: bool
       start: 3
-      end: 32
+      end: 4
+    cp_three_state:
+      base: bool
+      start: 4
+      end: 5
+    power_down:
+      base: bool
+      start: 5
+      end: 6
+    pd_polarity:
+      base: uint
+      start: 6
+      end: 7
+      try_conversion:
+        name: PdPolarity
+        Negative: 0b0
+        Positive: 0b1
+    ldp:
+      base: uint
+      start: 7
+      end: 8
+      try_conversion:
+        name: Ldp
+        Nanosecs10: 0b0
+        Nanosecs6: 0b1
+    ldf:
+      base: uint
+      start: 8
+      end: 9
+      try_conversion:
+        name: Ldf
+        FracN: 0b0
+        IntN: 0b1
+    charge_pump_current_setting:
+      base: uint
+      start: 9
+      end: 13
+    double_buffer_enable:
+      base: bool
+      start: 13
+      end: 14
+    r_counter:
+      base: uint
+      start: 14
+      end: 24
+    ref_div2:
+      base: bool
+      start: 24
+      end: 25
+    ref_doubler:
+      base: bool
+      start: 25
+      end: 26
+    muxout_control:
+      base: uint
+      start: 26
+      end: 29
+      try_conversion:
+        name: MuxoutControl
+        ThreeState: 0b000
+        DVdd: 0b001
+        DGnd: 0b010
+        RCounterOutput: 0b011
+        NDividerOutput: 0b100
+        AnalogLockDetect: 0b101
+        DigitalLockDetect: 0b110
+        Reserved: 0b111
+    noise_mode:
+      base: uint
+      start: 29
+      end: 31
+      try_conversion:
+        name: NoiseMode
+        LowNoiseMode: 0b00
+        Reserved1: 0b01
+        Reserved2: 0b10
+        LowSpurMode: 0b11
 
 R4OutputStage:
   type: register
@@ -153,10 +219,68 @@ R4OutputStage:
       access: RO
       start: 0
       end: 3
-    payload:
+    output_power:
       base: uint
       start: 3
-      end: 32
+      end: 5
+      try_conversion:
+        name: OutputPowerLevel
+        Minus4dBm: 0b00
+        Minus1dBm: 0b01
+        Plus2dBm: 0b10
+        Plus5dBm: 0b11
+    rf_out:
+      base: bool
+      start: 5
+      end: 6
+    aux_output_power:
+      base: uint
+      start: 6
+      end: 8
+      try_conversion:
+        name: AuxOutputPowerLevel
+        Minus4dBm: 0b00
+        Minus1dBm: 0b01
+        Plus2dBm: 0b10
+        Plus5dBm: 0b11
+    aux_out:
+      base: bool
+      start: 8
+      end: 9
+    aux_output_select:
+      base: uint
+      start: 9
+      end: 10
+      try_conversion:
+        name: AuxOutputSelect
+        DividedOutput: 0b0
+        FundamentalOutput: 0b1
+    mute_till_lock_detect:
+      base: bool
+      start: 10
+      end: 11
+    vco_power_down:
+      base: bool
+      start: 11
+      end: 12
+    band_select_clock_divider:
+      base: uint
+      start: 12
+      end: 20
+    rf_divider_select:
+      base: uint
+      start: 20
+      end: 23
+      try_conversion:
+        name: RfDividerSelect
+        DivBy1: 0b000
+        DivBy2: 0b001
+        DivBy4: 0b010
+        DivBy8: 0b011
+        DivBy16: 0b100
+        DivBy32: 0b101
+        DivBy64: 0b110
+        Reserved: 0b111
 
 R5LatchAndStatus:
   type: register
@@ -168,7 +292,18 @@ R5LatchAndStatus:
       access: RO
       start: 0
       end: 3
-    payload:
+    reserved_bits_3_22:
       base: uint
+      access: RO
       start: 3
-      end: 32
+      end: 22
+    lock_detect_pin_operation:
+      base: uint
+      start: 22
+      end: 24
+      try_conversion:
+        name: LockDetectPinOperation
+        Low: 0b00
+        DigitalLockDetect: 0b01
+        LowAlt: 0b10
+        High: 0b11
