@@ -1,10 +1,10 @@
 [package]
 name = "adf435x"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2024"
 authors = ["Gerzain Mata <leftger@gmail.com>"]
 description = "Type-safe Rust driver for ADF435x wideband RF PLL synthesizers using device-driver crate"
-repository = "https://github.com/yourusername/adf435x"
+repository = "https://github.com/leftger/adf435x"
 license = "MIT OR Apache-2.0"
 keywords = ["adf435x", "pll", "rf", "synthesizer", "embedded"]
 categories = ["embedded", "hardware-support", "no-std"]
