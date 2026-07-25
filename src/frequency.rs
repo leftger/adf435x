@@ -159,7 +159,7 @@ impl FracN {
     where
         I: RegisterInterface<AddressType = u8>,
     {
-        let f_pfd = self.0 .0 as u64;
+        let f_pfd = self.0.0 as u64;
 
         // Read modulus from R1
         let r1 = device.r_1_phase_and_modulus().read()?;
@@ -228,7 +228,7 @@ impl FracN {
         let int = r0.integer_value() as u64;
         let frac = r0.fractional_value() as u64;
         let modulus = r1.modulus() as u64;
-        let f_pfd = self.0 .0 as u64;
+        let f_pfd = self.0.0 as u64;
 
         // f_OUT = f_PFD × (INT + FRAC/MOD)
         let freq = f_pfd * int + (f_pfd * frac) / modulus;
@@ -256,6 +256,6 @@ mod tests {
 
         // For 2.4 GHz with 25 MHz PFD: INT = 96
         // f_OUT = 25 MHz × 96 = 2.4 GHz
-        assert_eq!(frac_n.0 .0, 25_000_000);
+        assert_eq!(frac_n.0.0, 25_000_000);
     }
 }

@@ -118,14 +118,14 @@ fn main() {
     println!("1. One-shot initialization using InitConfig:");
     println!("   Programming R5→R0 in datasheet order with automatic LE pulsing");
     let mut cfg = adf435x::InitConfig::default();
-    cfg.reference_counter = 1;     // R = 1 for 25 MHz reference
-    cfg.modulus = 4095;            // Maximum resolution
-    cfg.prescaler_89 = true;       // 8/9 prescaler for higher frequencies
-    cfg.integer_value = 96;        // INT = 96 for 2.4 GHz with 25 MHz PFD
-    cfg.fractional_value = 0;      // FRAC = 0 (integer mode)
-    cfg.charge_pump_current = 7;   // Mid-range
+    cfg.reference_counter = 1; // R = 1 for 25 MHz reference
+    cfg.modulus = 4095; // Maximum resolution
+    cfg.prescaler_89 = true; // 8/9 prescaler for higher frequencies
+    cfg.integer_value = 96; // INT = 96 for 2.4 GHz with 25 MHz PFD
+    cfg.fractional_value = 0; // FRAC = 0 (integer mode)
+    cfg.charge_pump_current = 7; // Mid-range
     cfg.output_power = adf435x::OutputPowerLevel::Plus5DBm; // +5 dBm
-    cfg.rf_out_enable = true;      // Enable primary output
+    cfg.rf_out_enable = true; // Enable primary output
 
     driver.initialize(&cfg, &mut delay).unwrap();
     println!("   All registers programmed and latched!\n");

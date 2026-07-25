@@ -117,13 +117,13 @@ fn main() {
     println!("2. One-shot initialization using InitConfig:");
     println!("   Programming R5→R0 in datasheet order with automatic LE pulsing");
     let mut cfg = adf435x::InitConfig::default();
-    cfg.reference_counter = 1;     // R = 1 for 25 MHz reference
-    cfg.modulus = 4095;            // Maximum resolution
-    cfg.integer_value = 96;        // INT = 96 for 2.4 GHz with 25 MHz PFD
-    cfg.fractional_value = 0;      // FRAC = 0 (integer mode)
-    cfg.charge_pump_current = 7;   // Mid-range
+    cfg.reference_counter = 1; // R = 1 for 25 MHz reference
+    cfg.modulus = 4095; // Maximum resolution
+    cfg.integer_value = 96; // INT = 96 for 2.4 GHz with 25 MHz PFD
+    cfg.fractional_value = 0; // FRAC = 0 (integer mode)
+    cfg.charge_pump_current = 7; // Mid-range
     cfg.output_power = adf435x::OutputPowerLevel::Plus5DBm; // +5 dBm
-    cfg.rf_out_enable = true;      // Enable primary output
+    cfg.rf_out_enable = true; // Enable primary output
     cfg.noise_mode = adf435x::NoiseMode::LowNoiseMode; // Start with low noise
 
     driver.initialize(&cfg, &mut delay).unwrap();
@@ -228,7 +228,9 @@ fn main() {
 
     // Demonstrate noise mode switching
     println!("7.5. Switching to Low Spur mode for better spurious performance:");
-    driver.set_noise_mode(adf435x::NoiseMode::LowSpurMode).unwrap();
+    driver
+        .set_noise_mode(adf435x::NoiseMode::LowSpurMode)
+        .unwrap();
     driver.latch(&mut delay).unwrap();
     println!("    Switched to Low Spur mode\n");
 

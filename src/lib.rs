@@ -10,7 +10,7 @@
 //!
 //! - **Type-safe register access** - Generated API from YAML manifest prevents invalid operations
 //! - **Automatic LE pulsing** - High-level drivers handle Load Enable pin timing automatically
-//! - **One-shot initialization** - [`InitConfig`] and [`initialize()`] methods for datasheet-compliant R5→R0 programming
+//! - **One-shot initialization** - [`InitConfig`] and [`Adf435xDriver::initialize`] for datasheet-compliant R5→R0 programming
 //! - **Frequency configuration helpers** - [`Fpfd`] and [`FracN`] for fractional-N mode
 //! - **No_std support** - Works in embedded environments (with optional `std` feature)
 //! - **Flexible interface** - Bring your own SPI implementation via [`RegisterInterface`]
@@ -647,10 +647,10 @@ pub struct InitConfig {
     pub ref_doubler: bool,
 
     // R1 - Phase and Modulus
-    pub modulus: u16,         // 1..=4095
-    pub phase_value: u16,     // < modulus
-    pub prescaler_89: bool,   // true => 8/9, false => 4/5
-    pub phase_adjust: bool,   // enable phase adjust in R1
+    pub modulus: u16,       // 1..=4095
+    pub phase_value: u16,   // < modulus
+    pub prescaler_89: bool, // true => 8/9, false => 4/5
+    pub phase_adjust: bool, // enable phase adjust in R1
 
     // R0 - Frequency Control
     pub integer_value: u16,
@@ -754,8 +754,16 @@ impl InitConfig {
                 NoiseModeSetting::LowNoise => NoiseMode::LowNoiseMode,
                 NoiseModeSetting::LowSpur => NoiseMode::LowSpurMode,
             },
-            ldp: if ldp_6ns { Ldp::Nanosecs6 } else { Ldp::Nanosecs10 },
-            ldf: if ldf_integer_mode { Ldf::IntN } else { Ldf::FracN },
+            ldp: if ldp_6ns {
+                Ldp::Nanosecs6
+            } else {
+                Ldp::Nanosecs10
+            },
+            ldf: if ldf_integer_mode {
+                Ldf::IntN
+            } else {
+                Ldf::FracN
+            },
             phase_detector_polarity: if phase_detector_polarity_positive {
                 PdPolarity::Positive
             } else {
@@ -797,7 +805,7 @@ impl Default for InitConfig {
             muxout_control: MuxoutControl::DigitalLockDetect,
             noise_mode: NoiseMode::LowNoiseMode,
             ldp: Ldp::Nanosecs10, // 10 ns recommended for frac-N
-            ldf: Ldf::FracN,       // fractional-N default
+            ldf: Ldf::FracN,      // fractional-N default
             phase_detector_polarity: PdPolarity::Positive,
             power_down: false,
             charge_pump_three_state: false,
@@ -899,7 +907,10 @@ where
                 // For fractional-N: LDF=0, LDP=0; For integer-N: LDF=1, LDP=1
                 r.set_lock_detect_function(matches!(cfg.ldf, Ldf::IntN));
                 r.set_lock_detect_precision(matches!(cfg.ldf, Ldf::IntN));
-                r.set_phase_detector_polarity(matches!(cfg.phase_detector_polarity, PdPolarity::Positive));
+                r.set_phase_detector_polarity(matches!(
+                    cfg.phase_detector_polarity,
+                    PdPolarity::Positive
+                ));
                 r.set_power_down(cfg.power_down);
                 r.set_charge_pump_three_state(cfg.charge_pump_three_state);
                 r.set_counter_reset(cfg.counter_reset);
@@ -1018,7 +1029,10 @@ where
                 r.set_ref_doubler(cfg.ref_doubler);
                 r.set_lock_detect_function(matches!(cfg.ldf, Ldf::IntN));
                 r.set_lock_detect_precision(matches!(cfg.ldf, Ldf::IntN));
-                r.set_phase_detector_polarity(matches!(cfg.phase_detector_polarity, PdPolarity::Positive));
+                r.set_phase_detector_polarity(matches!(
+                    cfg.phase_detector_polarity,
+                    PdPolarity::Positive
+                ));
                 r.set_power_down(cfg.power_down);
                 r.set_charge_pump_three_state(cfg.charge_pump_three_state);
                 r.set_counter_reset(cfg.counter_reset);
