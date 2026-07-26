@@ -46,7 +46,7 @@
 //! Use the raw [`Device`] type when you need complete control:
 //!
 //! ```
-//! use {new_device, RegisterInterface};
+//! use adf435x::{new_device, RegisterInterface};
 //! use core::convert::Infallible;
 //!
 //! struct SpiInterface;
@@ -78,7 +78,7 @@
 //! Use [`Adf435xDriver`] for automatic LE pulsing when CE is tied high:
 //!
 //! ```no_run
-//! use {Adf435xDriver, RegisterInterface, OutputPin, DelayUs};
+//! use adf435x::{Adf435xDriver, DelayUs, OutputPin, RegisterInterface};
 //! # use core::convert::Infallible;
 //! # struct SpiInterface;
 //! # impl RegisterInterface for SpiInterface {
@@ -121,7 +121,7 @@
 //! Use [`Adf435xDriverWithCE`] for CE control and frequency helpers:
 //!
 //! ```no_run
-//! use {Adf435xDriverWithCE, RegisterInterface, OutputPin, DelayUs16, Fpfd, FracN};
+//! use adf435x::{Adf435xDriverWithCE, DelayUs16, Fpfd, FracN, OutputPin, RegisterInterface};
 //! # use core::convert::Infallible;
 //! # struct SpiInterface;
 //! # impl RegisterInterface for SpiInterface {
@@ -195,7 +195,7 @@ pub type Device<I> = Adf435x<I>;
 ///
 /// ```
 /// use core::convert::Infallible;
-/// use {new_device, RegisterInterface};
+/// use adf435x::{new_device, RegisterInterface};
 ///
 /// struct MockInterface;
 ///
@@ -319,7 +319,7 @@ impl<SpiError, PinError> From<DriverError<SpiError, PinError, PinError>>
 /// # Example
 ///
 /// ```no_run
-/// # use {Adf435xDriver, RegisterInterface, OutputPin, DelayUs};
+/// # use adf435x::{Adf435xDriver, DelayUs, OutputPin, RegisterInterface};
 /// # use core::convert::Infallible;
 /// # struct SpiInterface;
 /// # impl RegisterInterface for SpiInterface {
@@ -453,7 +453,7 @@ where
 /// # Example
 ///
 /// ```no_run
-/// # use {Adf435xDriverWithCE, RegisterInterface, OutputPin, DelayUs16};
+/// # use adf435x::{Adf435xDriverWithCE, DelayUs16, OutputPin, RegisterInterface};
 /// # use core::convert::Infallible;
 /// # struct SpiInterface;
 /// # impl RegisterInterface for SpiInterface {
