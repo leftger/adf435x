@@ -60,79 +60,11 @@ R2ReferenceAndChargePump:
       access: RO
       start: 0
       end: 3
-    muxout:
-      base: uint
-      start: 3
-      end: 6
-    noise_mode:
-      base: uint
-      start: 6
-      end: 8
-    reserved_bit8:
-      base: uint
-      access: RO
-      start: 8
-      end: 9
-    charge_pump_current:
-      base: uint
-      start: 9
-      end: 13
-    double_buffer:
-      base: bool
-      start: 13
-      end: 14
-    reference_counter:
-      base: uint
-      start: 14
-      end: 24
-    ref_divide_by_2:
-      base: bool
-      start: 24
-      end: 25
-    ref_doubler:
-      base: bool
-      start: 25
-      end: 26
-    lock_detect_function:
-      base: bool
-      start: 26
-      end: 27
-    lock_detect_precision:
-      base: bool
-      start: 27
-      end: 28
-    phase_detector_polarity:
-      base: bool
-      start: 28
-      end: 29
-    power_down:
-      base: bool
-      start: 29
-      end: 30
-    charge_pump_three_state:
-      base: bool
-      start: 30
-      end: 31
-    counter_reset:
-      base: bool
-      start: 31
-      end: 32
-
-R3FunctionControl:
-  type: register
-  address: 3
-  size_bits: 32
-  fields:
-    register_address:
-      base: uint
-      access: RO
-      start: 0
-      end: 3
     counter_reset:
       base: bool
       start: 3
       end: 4
-    cp_three_state:
+    charge_pump_three_state:
       base: bool
       start: 4
       end: 5
@@ -164,19 +96,19 @@ R3FunctionControl:
         name: Ldf
         FracN: 0b0
         IntN: 0b1
-    charge_pump_current_setting:
+    charge_pump_current:
       base: uint
       start: 9
       end: 13
-    double_buffer_enable:
+    double_buffer:
       base: bool
       start: 13
       end: 14
-    r_counter:
+    reference_counter:
       base: uint
       start: 14
       end: 24
-    ref_div2:
+    ref_divide_by_2:
       base: bool
       start: 24
       end: 25
@@ -184,7 +116,7 @@ R3FunctionControl:
       base: bool
       start: 25
       end: 26
-    muxout_control:
+    muxout:
       base: uint
       start: 26
       end: 29
@@ -208,6 +140,55 @@ R3FunctionControl:
         Reserved1: 0b01
         Reserved2: 0b10
         LowSpurMode: 0b11
+
+R3FunctionControl:
+  type: register
+  address: 3
+  size_bits: 32
+  fields:
+    register_address:
+      base: uint
+      access: RO
+      start: 0
+      end: 3
+    clock_divider_value:
+      base: uint
+      start: 3
+      end: 15
+    clock_divider_mode:
+      base: uint
+      start: 15
+      end: 17
+      try_conversion:
+        name: ClockDividerMode
+        Disabled: 0b00
+        FastLockEnable: 0b01
+        ResyncEnable: 0b10
+        Reserved: 0b11
+    csr_enable:
+      base: bool
+      start: 18
+      end: 19
+    charge_cancellation:
+      base: bool
+      start: 21
+      end: 22
+    abp:
+      base: uint
+      start: 22
+      end: 23
+      try_conversion:
+        name: Abp
+        Nanosecs6: 0b0
+        Nanosecs3: 0b1
+    band_select_clock_mode:
+      base: uint
+      start: 23
+      end: 24
+      try_conversion:
+        name: BandSelectClockMode
+        Low: 0b0
+        High: 0b1
 
 R4OutputStage:
   type: register
@@ -281,6 +262,14 @@ R4OutputStage:
         DivBy32: 0b101
         DivBy64: 0b110
         Reserved: 0b111
+    feedback_select:
+      base: uint
+      start: 23
+      end: 24
+      try_conversion:
+        name: FeedbackSelect
+        DividedOutput: 0b0
+        FundamentalOutput: 0b1
 
 R5LatchAndStatus:
   type: register
@@ -292,11 +281,10 @@ R5LatchAndStatus:
       access: RO
       start: 0
       end: 3
-    reserved_bits_3_22:
+    reserved_bits_19_20:
       base: uint
-      access: RO
-      start: 3
-      end: 22
+      start: 19
+      end: 21
     lock_detect_pin_operation:
       base: uint
       start: 22

@@ -627,24 +627,32 @@ pub struct InitConfig {
     pub aux_output_select: AuxOutputSelect,
     pub mute_till_lock_detect: bool,
     pub vco_power_down: bool,
-    pub band_select_clock_divider: u8, // 0..=255
+    pub band_select_clock_divider: u8, // 1..=255
     pub rf_divider_select: RfDividerSelect,
+    pub feedback_select: FeedbackSelect,
 
-    // R3 - Function Control (muxout, noise mode, lock detect filters)
-    pub muxout_control: MuxoutControl,
-    pub noise_mode: NoiseMode,
-    pub ldp: Ldp,
-    pub ldf: Ldf,
-    pub phase_detector_polarity: PdPolarity,
-    pub power_down: bool,
-    pub charge_pump_three_state: bool,
-    pub counter_reset: bool,
+    // R3 - Function Control (fast lock, phase resync, CSR, ABP)
+    pub clock_divider_value: u16, // 0..=4095
+    pub clock_divider_mode: ClockDividerMode,
+    pub csr_enable: bool,
+    pub charge_cancellation: bool,
+    pub abp: Abp,
+    pub band_select_clock_mode: BandSelectClockMode,
 
     // R2 - Reference and Charge Pump
+    pub counter_reset: bool,
+    pub charge_pump_three_state: bool,
+    pub power_down: bool,
+    pub phase_detector_polarity: PdPolarity,
+    pub ldp: Ldp,
+    pub ldf: Ldf,
     pub charge_pump_current: u8, // 0..=15
+    pub double_buffer: bool,
     pub reference_counter: u16,  // 1..=1023
     pub ref_divide_by_2: bool,
     pub ref_doubler: bool,
+    pub muxout_control: MuxoutControl,
+    pub noise_mode: NoiseMode,
 
     // R1 - Phase and Modulus
     pub modulus: u16,       // 1..=4095
@@ -677,18 +685,26 @@ impl InitConfig {
         vco_power_down: bool,
         band_select_clock_divider: u8,
         rf_divider_select: u8,
-        muxout_control: u8,
-        noise_mode: NoiseModeSetting,
+        feedback_select_fundamental: bool,
+        clock_divider_value: u16,
+        clock_divider_mode: u8,
+        csr_enable: bool,
+        charge_cancellation: bool,
+        abp_3ns: bool,
+        band_select_clock_mode_high: bool,
+        counter_reset: bool,
+        charge_pump_three_state: bool,
+        power_down: bool,
+        phase_detector_polarity_positive: bool,
         ldp_6ns: bool,
         ldf_integer_mode: bool,
-        phase_detector_polarity_positive: bool,
-        power_down: bool,
-        charge_pump_three_state: bool,
-        counter_reset: bool,
         charge_pump_current: u8,
+        double_buffer: bool,
         reference_counter: u16,
         ref_divide_by_2: bool,
         ref_doubler: bool,
+        muxout_control: u8,
+        noise_mode: NoiseModeSetting,
         modulus: u16,
         phase_value: u16,
         prescaler_89: bool,
@@ -739,6 +755,54 @@ impl InitConfig {
                 0b111 => RfDividerSelect::Reserved,
                 _ => RfDividerSelect::DivBy1,
             },
+            feedback_select: if feedback_select_fundamental {
+                FeedbackSelect::FundamentalOutput
+            } else {
+                FeedbackSelect::DividedOutput
+            },
+            clock_divider_value,
+            clock_divider_mode: match clock_divider_mode {
+                0b00 => ClockDividerMode::Disabled,
+                0b01 => ClockDividerMode::FastLockEnable,
+                0b10 => ClockDividerMode::ResyncEnable,
+                0b11 => ClockDividerMode::Reserved,
+                _ => ClockDividerMode::Disabled,
+            },
+            csr_enable,
+            charge_cancellation,
+            abp: if abp_3ns {
+                Abp::Nanosecs3
+            } else {
+                Abp::Nanosecs6
+            },
+            band_select_clock_mode: if band_select_clock_mode_high {
+                BandSelectClockMode::High
+            } else {
+                BandSelectClockMode::Low
+            },
+            counter_reset,
+            charge_pump_three_state,
+            power_down,
+            phase_detector_polarity: if phase_detector_polarity_positive {
+                PdPolarity::Positive
+            } else {
+                PdPolarity::Negative
+            },
+            ldp: if ldp_6ns {
+                Ldp::Nanosecs6
+            } else {
+                Ldp::Nanosecs10
+            },
+            ldf: if ldf_integer_mode {
+                Ldf::IntN
+            } else {
+                Ldf::FracN
+            },
+            charge_pump_current,
+            double_buffer,
+            reference_counter,
+            ref_divide_by_2,
+            ref_doubler,
             muxout_control: match muxout_control {
                 0b000 => MuxoutControl::ThreeState,
                 0b001 => MuxoutControl::DVdd,
@@ -754,28 +818,6 @@ impl InitConfig {
                 NoiseModeSetting::LowNoise => NoiseMode::LowNoiseMode,
                 NoiseModeSetting::LowSpur => NoiseMode::LowSpurMode,
             },
-            ldp: if ldp_6ns {
-                Ldp::Nanosecs6
-            } else {
-                Ldp::Nanosecs10
-            },
-            ldf: if ldf_integer_mode {
-                Ldf::IntN
-            } else {
-                Ldf::FracN
-            },
-            phase_detector_polarity: if phase_detector_polarity_positive {
-                PdPolarity::Positive
-            } else {
-                PdPolarity::Negative
-            },
-            power_down,
-            charge_pump_three_state,
-            counter_reset,
-            charge_pump_current,
-            reference_counter,
-            ref_divide_by_2,
-            ref_doubler,
             modulus,
             phase_value,
             prescaler_89,
@@ -801,20 +843,28 @@ impl Default for InitConfig {
             vco_power_down: false,
             band_select_clock_divider: 200,
             rf_divider_select: RfDividerSelect::DivBy1,
+            feedback_select: FeedbackSelect::DividedOutput,
             // R3
-            muxout_control: MuxoutControl::DigitalLockDetect,
-            noise_mode: NoiseMode::LowNoiseMode,
+            clock_divider_value: 150,
+            clock_divider_mode: ClockDividerMode::Disabled,
+            csr_enable: false,
+            charge_cancellation: false,
+            abp: Abp::Nanosecs6, // 6 ns recommended for frac-N
+            band_select_clock_mode: BandSelectClockMode::Low,
+            // R2
+            counter_reset: false,
+            charge_pump_three_state: false,
+            power_down: false,
+            phase_detector_polarity: PdPolarity::Positive,
             ldp: Ldp::Nanosecs10, // 10 ns recommended for frac-N
             ldf: Ldf::FracN,      // fractional-N default
-            phase_detector_polarity: PdPolarity::Positive,
-            power_down: false,
-            charge_pump_three_state: false,
-            counter_reset: false,
-            // R2
             charge_pump_current: 7,
+            double_buffer: false,
             reference_counter: 1,
             ref_divide_by_2: false,
             ref_doubler: false,
+            muxout_control: MuxoutControl::DigitalLockDetect,
+            noise_mode: NoiseMode::LowNoiseMode,
             // R1
             modulus: 4095,
             phase_value: 1,
@@ -857,6 +907,7 @@ where
         self.device
             .r_5_latch_and_status()
             .write(|r| {
+                r.set_reserved_bits_19_20(0b11); // Required per datasheet Figure 29
                 r.set_lock_detect_pin_operation(cfg.lock_detect_pin_operation);
             })
             .map_err(DriverError::Spi)?;
@@ -875,6 +926,7 @@ where
                 r.set_vco_power_down(cfg.vco_power_down);
                 r.set_band_select_clock_divider(cfg.band_select_clock_divider);
                 r.set_rf_divider_select(cfg.rf_divider_select);
+                r.set_feedback_select(cfg.feedback_select);
             })
             .map_err(DriverError::Spi)?;
         self.latch(delay)?;
@@ -883,14 +935,12 @@ where
         self.device
             .r_3_function_control()
             .write(|r| {
-                r.set_ldp(cfg.ldp);
-                r.set_ldf(cfg.ldf);
-                r.set_pd_polarity(cfg.phase_detector_polarity);
-                r.set_power_down(cfg.power_down);
-                r.set_cp_three_state(cfg.charge_pump_three_state);
-                r.set_counter_reset(cfg.counter_reset);
-                r.set_muxout_control(cfg.muxout_control);
-                r.set_noise_mode(cfg.noise_mode);
+                r.set_clock_divider_value(cfg.clock_divider_value);
+                r.set_clock_divider_mode(cfg.clock_divider_mode);
+                r.set_csr_enable(cfg.csr_enable);
+                r.set_charge_cancellation(cfg.charge_cancellation);
+                r.set_abp(cfg.abp);
+                r.set_band_select_clock_mode(cfg.band_select_clock_mode);
             })
             .map_err(DriverError::Spi)?;
         self.latch(delay)?;
@@ -899,21 +949,19 @@ where
         self.device
             .r_2_reference_and_charge_pump()
             .write(|r| {
+                r.set_counter_reset(cfg.counter_reset);
+                r.set_charge_pump_three_state(cfg.charge_pump_three_state);
+                r.set_power_down(cfg.power_down);
+                r.set_pd_polarity(cfg.phase_detector_polarity);
+                r.set_ldp(cfg.ldp);
+                r.set_ldf(cfg.ldf);
                 r.set_charge_pump_current(cfg.charge_pump_current);
+                r.set_double_buffer(cfg.double_buffer);
                 r.set_reference_counter(cfg.reference_counter);
                 r.set_ref_divide_by_2(cfg.ref_divide_by_2);
                 r.set_ref_doubler(cfg.ref_doubler);
-                // Lock detect function and precision recommended per mode
-                // For fractional-N: LDF=0, LDP=0; For integer-N: LDF=1, LDP=1
-                r.set_lock_detect_function(matches!(cfg.ldf, Ldf::IntN));
-                r.set_lock_detect_precision(matches!(cfg.ldf, Ldf::IntN));
-                r.set_phase_detector_polarity(matches!(
-                    cfg.phase_detector_polarity,
-                    PdPolarity::Positive
-                ));
-                r.set_power_down(cfg.power_down);
-                r.set_charge_pump_three_state(cfg.charge_pump_three_state);
-                r.set_counter_reset(cfg.counter_reset);
+                r.set_muxout(cfg.muxout_control);
+                r.set_noise_mode(cfg.noise_mode);
             })
             .map_err(DriverError::Spi)?;
         self.latch(delay)?;
@@ -945,14 +993,14 @@ where
 
     /// Convenience helper to set the Noise Mode (Low Noise vs Low Spur).
     ///
-    /// This modifies R3 noise mode field and issues no LE pulse by itself.
+    /// This modifies R2 noise mode field and issues no LE pulse by itself.
     /// Call [`latch()`](Self::latch) after invoking this method.
     pub fn set_noise_mode(
         &mut self,
         mode: NoiseMode,
     ) -> Result<(), DriverError<I::Error, P::Error, P::Error>> {
         self.device
-            .r_3_function_control()
+            .r_2_reference_and_charge_pump()
             .modify(|r| {
                 r.set_noise_mode(mode);
             })
@@ -981,6 +1029,7 @@ where
         self.device
             .r_5_latch_and_status()
             .write(|r| {
+                r.set_reserved_bits_19_20(0b11); // Required per datasheet Figure 29
                 r.set_lock_detect_pin_operation(cfg.lock_detect_pin_operation);
             })
             .map_err(DriverError::Spi)?;
@@ -999,6 +1048,7 @@ where
                 r.set_vco_power_down(cfg.vco_power_down);
                 r.set_band_select_clock_divider(cfg.band_select_clock_divider);
                 r.set_rf_divider_select(cfg.rf_divider_select);
+                r.set_feedback_select(cfg.feedback_select);
             })
             .map_err(DriverError::Spi)?;
         self.latch(delay)?;
@@ -1007,14 +1057,12 @@ where
         self.device
             .r_3_function_control()
             .write(|r| {
-                r.set_ldp(cfg.ldp);
-                r.set_ldf(cfg.ldf);
-                r.set_pd_polarity(cfg.phase_detector_polarity);
-                r.set_power_down(cfg.power_down);
-                r.set_cp_three_state(cfg.charge_pump_three_state);
-                r.set_counter_reset(cfg.counter_reset);
-                r.set_muxout_control(cfg.muxout_control);
-                r.set_noise_mode(cfg.noise_mode);
+                r.set_clock_divider_value(cfg.clock_divider_value);
+                r.set_clock_divider_mode(cfg.clock_divider_mode);
+                r.set_csr_enable(cfg.csr_enable);
+                r.set_charge_cancellation(cfg.charge_cancellation);
+                r.set_abp(cfg.abp);
+                r.set_band_select_clock_mode(cfg.band_select_clock_mode);
             })
             .map_err(DriverError::Spi)?;
         self.latch(delay)?;
@@ -1023,19 +1071,19 @@ where
         self.device
             .r_2_reference_and_charge_pump()
             .write(|r| {
-                r.set_charge_pump_current(cfg.charge_pump_current as u8);
+                r.set_counter_reset(cfg.counter_reset);
+                r.set_charge_pump_three_state(cfg.charge_pump_three_state);
+                r.set_power_down(cfg.power_down);
+                r.set_pd_polarity(cfg.phase_detector_polarity);
+                r.set_ldp(cfg.ldp);
+                r.set_ldf(cfg.ldf);
+                r.set_charge_pump_current(cfg.charge_pump_current);
+                r.set_double_buffer(cfg.double_buffer);
                 r.set_reference_counter(cfg.reference_counter);
                 r.set_ref_divide_by_2(cfg.ref_divide_by_2);
                 r.set_ref_doubler(cfg.ref_doubler);
-                r.set_lock_detect_function(matches!(cfg.ldf, Ldf::IntN));
-                r.set_lock_detect_precision(matches!(cfg.ldf, Ldf::IntN));
-                r.set_phase_detector_polarity(matches!(
-                    cfg.phase_detector_polarity,
-                    PdPolarity::Positive
-                ));
-                r.set_power_down(cfg.power_down);
-                r.set_charge_pump_three_state(cfg.charge_pump_three_state);
-                r.set_counter_reset(cfg.counter_reset);
+                r.set_muxout(cfg.muxout_control);
+                r.set_noise_mode(cfg.noise_mode);
             })
             .map_err(DriverError::Spi)?;
         self.latch(delay)?;
@@ -1067,14 +1115,14 @@ where
 
     /// Convenience helper to set the Noise Mode (Low Noise vs Low Spur).
     ///
-    /// This modifies R3 noise mode field and issues no LE pulse by itself.
+    /// This modifies R2 noise mode field and issues no LE pulse by itself.
     /// Call [`latch()`](Self::latch) after invoking this method.
     pub fn set_noise_mode(
         &mut self,
         mode: NoiseMode,
     ) -> Result<(), DriverError<I::Error, CE::Error, LE::Error>> {
         self.device
-            .r_3_function_control()
+            .r_2_reference_and_charge_pump()
             .modify(|r| {
                 r.set_noise_mode(mode);
             })

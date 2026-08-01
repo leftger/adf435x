@@ -108,7 +108,7 @@ impl FracN {
         // Configure for fractional-N mode
         // This is a basic initialization - users may need to customize
         device.r_2_reference_and_charge_pump().modify(|r| {
-            r.set_lock_detect_function(false); // Fractional-N lock detect
+            r.set_ldf(crate::Ldf::FracN); // Fractional-N lock detect
         })?;
 
         Ok(())
@@ -117,23 +117,18 @@ impl FracN {
     /// Set the output frequency.
     ///
     /// Calculates INT and FRAC values and configures the device for the
-    /// requested frequency. Automatically selects the appropriate prescaler
-    /// (4/5 for < 3.6 GHz, 8/9 for >= 3.6 GHz).
+    /// requested frequency. Automatically selects:
+    /// - RF output divider (1, 2, 4, 8, 16, 32, 64) to keep VCO in 2.2 GHz - 4.4 GHz range
+    /// - Prescaler (4/5 for VCO < 3.6 GHz, 8/9 for VCO >= 3.6 GHz)
     ///
     /// # Arguments
     ///
     /// * `device` - Device to configure
-    /// * `freq_hz` - Desired output frequency in Hz
-    ///
-    /// # Frequency Range
-    ///
-    /// Typical range: 35 MHz - 4.4 GHz (depends on device variant)
+    /// * `freq_hz` - Desired output frequency in Hz (34.375 MHz to 4.4 GHz)
     ///
     /// # Errors
     ///
-    /// Returns an error if:
-    /// - The frequency is out of range
-    /// - Register operations fail
+    /// Returns an error if register operations fail.
     ///
     /// # Example
     ///
@@ -161,20 +156,43 @@ impl FracN {
     {
         let f_pfd = self.0.0 as u64;
 
+        // Select RF divider to bring VCO into range [2200 MHz, 4400 MHz]
+        let (rf_divider, rf_divider_select) = if freq_hz >= 2_200_000_000 {
+            (1u64, crate::RfDividerSelect::DivBy1)
+        } else if freq_hz >= 1_100_000_000 {
+            (2u64, crate::RfDividerSelect::DivBy2)
+        } else if freq_hz >= 550_000_000 {
+            (4u64, crate::RfDividerSelect::DivBy4)
+        } else if freq_hz >= 275_000_000 {
+            (8u64, crate::RfDividerSelect::DivBy8)
+        } else if freq_hz >= 137_500_000 {
+            (16u64, crate::RfDividerSelect::DivBy16)
+        } else if freq_hz >= 68_750_000 {
+            (32u64, crate::RfDividerSelect::DivBy32)
+        } else {
+            (64u64, crate::RfDividerSelect::DivBy64)
+        };
+
+        let f_vco = freq_hz * rf_divider;
+
         // Read modulus from R1
         let r1 = device.r_1_phase_and_modulus().read()?;
         let modulus = r1.modulus() as u64;
 
-        // Calculate INT and FRAC
-        // f_OUT = f_PFD × (INT + FRAC/MOD)
-        // For simplicity, assuming RF divider = 1 (need to calculate based on freq range)
-        let n = freq_hz / f_pfd;
+        // Calculate INT and FRAC for VCO frequency
+        // f_VCO = f_PFD × (INT + FRAC/MOD)
+        let n = f_vco / f_pfd;
         let int = n as u16;
-        let remainder = freq_hz - (n * f_pfd);
+        let remainder = f_vco - (n * f_pfd);
         let frac = ((remainder * modulus) / f_pfd) as u16;
 
-        // Select prescaler: 4/5 for < 3.6 GHz, 8/9 for >= 3.6 GHz
-        let prescaler_89 = freq_hz >= 3_600_000_000;
+        // Select prescaler: 4/5 for VCO < 3.6 GHz, 8/9 for VCO >= 3.6 GHz
+        let prescaler_89 = f_vco >= 3_600_000_000;
+
+        // Write R4 with RF divider select
+        device.r_4_output_stage().modify(|r| {
+            r.set_rf_divider_select(rf_divider_select);
+        })?;
 
         // Write R1 with prescaler
         device.r_1_phase_and_modulus().modify(|r| {
@@ -192,8 +210,8 @@ impl FracN {
 
     /// Read the current output frequency from the device.
     ///
-    /// Reads INT and FRAC values from R0 and MOD from R1 to calculate
-    /// the actual output frequency.
+    /// Reads INT and FRAC values from R0, MOD from R1, and RF divider from R4
+    /// to calculate the actual output frequency.
     ///
     /// # Errors
     ///
@@ -224,14 +242,28 @@ impl FracN {
     {
         let r0 = device.r_0_frequency_control().read()?;
         let r1 = device.r_1_phase_and_modulus().read()?;
+        let r4 = device.r_4_output_stage().read()?;
 
         let int = r0.integer_value() as u64;
         let frac = r0.fractional_value() as u64;
         let modulus = r1.modulus() as u64;
         let f_pfd = self.0.0 as u64;
 
-        // f_OUT = f_PFD × (INT + FRAC/MOD)
-        let freq = f_pfd * int + (f_pfd * frac) / modulus;
+        let rf_divider: u64 = match r4.rf_divider_select().unwrap_or(crate::RfDividerSelect::DivBy1) {
+            crate::RfDividerSelect::DivBy1 => 1,
+            crate::RfDividerSelect::DivBy2 => 2,
+            crate::RfDividerSelect::DivBy4 => 4,
+            crate::RfDividerSelect::DivBy8 => 8,
+            crate::RfDividerSelect::DivBy16 => 16,
+            crate::RfDividerSelect::DivBy32 => 32,
+            crate::RfDividerSelect::DivBy64 => 64,
+            crate::RfDividerSelect::Reserved => 1,
+        };
+
+        // f_VCO = f_PFD × (INT + FRAC/MOD)
+        // f_OUT = f_VCO / RF_DIVIDER
+        let f_vco = f_pfd * int + (f_pfd * frac) / modulus;
+        let freq = f_vco / rf_divider;
 
         Ok(freq)
     }
