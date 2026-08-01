@@ -648,7 +648,7 @@ pub struct InitConfig {
     pub ldf: Ldf,
     pub charge_pump_current: u8, // 0..=15
     pub double_buffer: bool,
-    pub reference_counter: u16,  // 1..=1023
+    pub reference_counter: u16, // 1..=1023
     pub ref_divide_by_2: bool,
     pub ref_doubler: bool,
     pub muxout_control: MuxoutControl,

@@ -249,7 +249,10 @@ impl FracN {
         let modulus = r1.modulus() as u64;
         let f_pfd = self.0.0 as u64;
 
-        let rf_divider: u64 = match r4.rf_divider_select().unwrap_or(crate::RfDividerSelect::DivBy1) {
+        let rf_divider: u64 = match r4
+            .rf_divider_select()
+            .unwrap_or(crate::RfDividerSelect::DivBy1)
+        {
             crate::RfDividerSelect::DivBy1 => 1,
             crate::RfDividerSelect::DivBy2 => 2,
             crate::RfDividerSelect::DivBy4 => 4,
